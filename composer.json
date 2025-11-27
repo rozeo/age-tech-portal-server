@@ -1,0 +1,13 @@
+{
+    "name": "rozeo/age-tech-portal-server",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rozeo"
+        }
+    ],
+    "require": {
+        "kreait/firebase-php": "^5.26"
+    }
+}
