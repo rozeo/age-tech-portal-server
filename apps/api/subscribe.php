@@ -2,12 +2,6 @@
 
 require_once __DIR__ . "/../index.php";
 
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\Messaging\Notification;
-use Kreait\Firebase\Messaging\CloudMessage;
-
-$messagingClient = new Factory()->createMessaging();
-
 // validate request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $_SERVER['CONTENT_TYPE'] !== 'application/json') {
     http_response_code(400);
@@ -29,9 +23,9 @@ if (!isset($request['app_id']) || !isset($request['state'])) {
 }
 
 $appId = $request['app_id'];
-$state = $request['state'];
+$token = $request['token'];
 
-if (!is_string($appId) || !in_array($state, ['GOOD_MORNING', 'GOOD_NIGHT'])) {
+if (!is_string($appId) || !is_string($token)) {
     http_response_code(400);
     echo "INVALID REQUEST.4";
     exit();
@@ -42,28 +36,20 @@ if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
         echo "INVALID REQUEST.5";
         exit();
 }
+
 // end request validation
 
 // fetch subscribe device targets
 $kvsIndexKeyName = "subscribe_index_$appId";
 $kvsDeviceTokenKeyPrefix = "subscribe_device_{$appId}_"; // + index number
-$deviceCount = (int) apcu_fetch($kvsIndexKeyName);
 
-$targetTokens = [];
-for ($i = 0; $i < $deviceCount; $i++) {
-     $kvsDeviceTokenKeyName = kvsDeviceTokenKeyPrefix . $i;
-     $deviceToken = apcu_fetch($kvsDeviceTokenKeyName, $isSuccess);
-     if ($isSuccess) {
-        $targetTokens[] = $deviceToken;
-     }
-}
+// initialize subscribe index entry
+apcu_add($kvsIndexKeyName, 0);
 
-if (count($targetTokens) > 0) {
-    $message = CloudMessage::new()->withNotification(Notification::create('TestNotification', 'Test!!'));
+// increment device index
+$newIndex = apcu_inc($kvsIndexKeyName, step: 1);
 
-    foreach ($targetTokens as $targetToken) {
-        $messagingClient->send($message->toToken($targetToken);
-    }
-}
+// set new token into kvs entry
+apcu_store($kvsDeviceTokenKeyPrefix . $newIndex, $token);
 
 echo "OK";
