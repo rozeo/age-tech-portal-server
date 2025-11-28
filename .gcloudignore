@@ -2,3 +2,4 @@ age-tech-portal-server.iml
 .idea
 composer.phar
 vendor/
+.git/

@@ -16,7 +16,7 @@ if ($request === false) {
     exit();
 }
 
-if (!isset($request['app_id']) || !isset($request['state'])) {
+if (!isset($request['app_id']) || !isset($request['token'])) {
     http_response_code(400);
     echo "INVALID REQUEST.3";
     exit();

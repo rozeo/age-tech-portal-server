@@ -11,7 +11,7 @@ $messagingClient = new Factory()->createMessaging();
 // validate request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $_SERVER['CONTENT_TYPE'] !== 'application/json') {
     http_response_code(400);
-    echo "INVALID REQUEST.1";
+    echo "INVALID REQUEST.1, " . ($_SERVER['CONTENT_TYPE'] ?? '');
     exit();
 }
 
@@ -50,8 +50,8 @@ $kvsDeviceTokenKeyPrefix = "subscribe_device_{$appId}_"; // + index number
 $deviceCount = (int) apcu_fetch($kvsIndexKeyName);
 
 $targetTokens = [];
-for ($i = 0; $i < $deviceCount; $i++) {
-     $kvsDeviceTokenKeyName = kvsDeviceTokenKeyPrefix . $i;
+for ($i = 1; $i <= $deviceCount; $i++) {
+     $kvsDeviceTokenKeyName = $kvsDeviceTokenKeyPrefix . $i;
      $deviceToken = apcu_fetch($kvsDeviceTokenKeyName, $isSuccess);
      if ($isSuccess) {
         $targetTokens[] = $deviceToken;
@@ -62,7 +62,7 @@ if (count($targetTokens) > 0) {
     $message = CloudMessage::new()->withNotification(Notification::create('TestNotification', 'Test!!'));
 
     foreach ($targetTokens as $targetToken) {
-        $messagingClient->send($message->toToken($targetToken);
+        $messagingClient->send($message->toToken($targetToken));
     }
 }
 
