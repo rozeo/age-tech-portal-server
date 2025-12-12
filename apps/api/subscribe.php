@@ -3,7 +3,7 @@
 require_once __DIR__ . "/../index.php";
 
 // validate request
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $_SERVER['CONTENT_TYPE'] !== 'application/json') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
     http_response_code(400);
     echo "INVALID REQUEST.1";
     exit();
