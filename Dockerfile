@@ -23,9 +23,12 @@ RUN set -ex; \
   } > "$PHP_INI_DIR/conf.d/cloud-run.ini"
 
 # Copy in custom code from the host machine.
-COPY apps/ /var/www/html/
+RUN rm -rf /var/www/html
+COPY apps/ /var/www/apps/
 COPY composer.json /var/www/composer.json
 COPY composer.lock /var/www/composer.lock
+COPY conf/000-default.conf /etc/apache2/sites-available/000-default.conf
+
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
@@ -47,5 +50,5 @@ RUN pecl install apcu && \
 RUN /usr/bin/composer install
 
 # Ensure the webserver has permissions to execute index.php
-RUN chown -R www-data:www-data /var/www/html
+RUN chown -R www-data:www-data /var/www/apps/
 

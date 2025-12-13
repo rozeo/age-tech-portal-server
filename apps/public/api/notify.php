@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . "/../index.php";
+require_once __DIR__ . "/../../index.php";
 
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\Notification;
@@ -31,7 +31,7 @@ if (!isset($request['app_id']) || !isset($request['state'])) {
 $appId = $request['app_id'];
 $state = $request['state'];
 
-if (!is_string($appId) || !in_array($state, ['GOOD_MORNING', 'GOOD_NIGHT'])) {
+if (!is_string($appId) || !in_array($state, ['GOOD_MORNING', 'GOOD_NIGHT', 'HELP_ME'])) {
     http_response_code(400);
     echo "INVALID REQUEST.4";
     exit();
