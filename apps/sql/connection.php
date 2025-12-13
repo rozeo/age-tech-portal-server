@@ -8,7 +8,7 @@ function createConnection(): \PDO {
     $username = getenv('DB_USER');
     $password = getenv('DB_`PASSWORD');
 
-    $dsn = "pgsql:host=$$host;dbname=$$database;user=$username;password=$$password";
+    $dsn = "pgsql:host=$host;dbname=$database;user=$username;password=$password";
 
     return new \PDO($dsn);
 }

@@ -43,9 +43,11 @@ RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/a
 # https://github.com/docker-library/docs/blob/master/php/README.md#configuration
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-RUN apt update && apt install -y git
+RUN apt update && apt install -y git libpq-dev && apt clean && rm -rf /var/lib/apt/lists/*
+
 RUN pecl install apcu && \
-    docker-php-ext-enable apcu
+    docker-php-ext-install pdo pdo_pgsql && \
+    docker-php-ext-enable apcu pdo pdo_pgsql
 
 RUN /usr/bin/composer install
 
