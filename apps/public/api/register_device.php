@@ -3,6 +3,10 @@
 require_once __DIR__ . "/../../index.php";
 require_once __DIR__ . "/../../sql/connection.php";
 
+use Kreait\Firebase\Exception\Messaging\NotFound;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+
 // validate request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
     http_response_code(400);
@@ -39,6 +43,17 @@ if (!preg_match($uuidRegex, $appId)) {
         exit();
 }
 // end request validation
+
+// check valid fcm token format
+$messagingClient = new Factory()->createMessaging();
+$message = CloudMessage::new()->withData(['type' => 'validation']);
+try {
+    $messagingClient->send($message->toToken($token), validateOnly: true);
+} catch (Exception $e) {
+    http_response_code(400);
+    echo "INVALID REQUEST.6";
+    exit();
+}
 
 $pdo = createConnection();
 $pdo->beginTransaction();

@@ -39,7 +39,7 @@ if (!is_string($appId) || !in_array($state, ['GOOD_MORNING', 'GOOD_NIGHT', 'HELP
 }
 
 $uuidRegex = "/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/";
-if (!preg_match($uuidRegex, $appId)) {
+if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
     http_response_code(400);
         echo "INVALID REQUEST.5";
         exit();
