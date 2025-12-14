@@ -46,7 +46,7 @@ try {
     $checkStatement = $pdo->prepare("SELECT * FROM devices WHERE app_id = ? FOR UPDATE");
     $checkStatement->execute([$appId]);
 
-    $currentDatetime = new DateTime()->format('Y-m-d H:i:s');
+    $currentDatetime = new DateTime()->format(DateTime::ATOM);
 
     if ($checkStatement->rowCount() === 0) {
         // register device record if not registered

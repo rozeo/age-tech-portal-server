@@ -52,7 +52,7 @@ try {
     if ($checkStatement->rowCount() === 0) {
         // register subscribe record if not subscribed
         $insertStatement = $pdo->prepare("INSERT INTO subscribes (app_id, target_app_id, created_at) VALUES (?, ?, ?)");
-        $insertStatement->execute([$appId, $targetAppId, new DateTime()->format('Y-m-d H:i:s')]);
+        $insertStatement->execute([$appId, $targetAppId, new DateTime()->format(DateTime::ATOM)]);
     }
     $pdo->commit();
 } catch (Throwable $e) {

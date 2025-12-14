@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../../index.php";
 require_once __DIR__ . "/../../sql/connection.php";
 
+use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\Notification;
 use Kreait\Firebase\Messaging\CloudMessage;
@@ -81,8 +82,13 @@ if (count($targetTokens) > 0) {
             'state' => $state,
         ]);
 
+    $expiredSubscriptions = [];
     foreach ($targetTokens as $targetToken) {
-        $messagingClient->send($message->toToken($targetToken));
+        try {
+            $messagingClient->send($message->toToken($targetToken));
+        } catch (NotFound $e) {
+            // TODO
+        }
     }
 }
 
