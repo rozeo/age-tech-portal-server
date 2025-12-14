@@ -32,7 +32,8 @@ if (!is_string($appId) || !is_string($token)) {
     exit();
 }
 
-if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
+$uuidRegex = "/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/";
+if (!preg_match($uuidRegex, $appId)) {
     http_response_code(400);
         echo "INVALID REQUEST.5";
         exit();
