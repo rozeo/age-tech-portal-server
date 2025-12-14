@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../../index.php";
+require_once __DIR__ . "/../../sql/connection.php";
 
 // validate request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
@@ -16,22 +17,23 @@ if ($request === false) {
     exit();
 }
 
-if (!isset($request['app_id']) || !isset($request['token'])) {
+if (!isset($request['app_id']) || !isset($request['target_app_id'])) {
     http_response_code(400);
     echo "INVALID REQUEST.3";
     exit();
 }
 
 $appId = $request['app_id'];
-$token = $request['token'];
+$targetAppId = $request['target_app_id'];
 
-if (!is_string($appId) || !is_string($token)) {
+if (!is_string($appId) || !is_string($targetAppId)) {
     http_response_code(400);
     echo "INVALID REQUEST.4";
     exit();
 }
 
-if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
+$uuidRegex = "/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/";
+if (!preg_match($uuidRegex, $appId) || !preg_match($uuidRegex, $targetAppId)) {
     http_response_code(400);
         echo "INVALID REQUEST.5";
         exit();
@@ -39,17 +41,26 @@ if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
 
 // end request validation
 
-// fetch subscribe device targets
-$kvsIndexKeyName = "subscribe_index_$appId";
-$kvsDeviceTokenKeyPrefix = "subscribe_device_{$appId}_"; // + index number
+$pdo = createConnection();
+$pdo->beginTransaction();
 
-// initialize subscribe index entry
-apcu_add($kvsIndexKeyName, 0);
+try {
+    // check already subscribed
+    $checkStatement = $pdo->prepare("SELECT * FROM subscribes WHERE app_id = ? AND target_app_id = ? FOR UPDATE");
+    $checkStatement->execute([$appId, $targetAppId]);
 
-// increment device index
-$newIndex = apcu_inc($kvsIndexKeyName, step: 1);
+    if ($checkStatement->rowCount() === 0) {
+        // register subscribe record if not subscribed
+        $insertStatement = $pdo->prepare("INSERT INTO subscribes (app_id, target_app_id) VALUES (?, ?)");
+        $insertStatement->execute([$appId, $targetAppId]);
+    }
+    $pdo->commit();
+} catch (Throwable $e) {
+    $pdo->rollback();
+    fwrite(STDERR, $e->getMessage());
+    http_response_code(500);
+    exit();
+}
 
-// set new token into kvs entry
-apcu_store($kvsDeviceTokenKeyPrefix . $newIndex, $token);
 
 echo "OK";

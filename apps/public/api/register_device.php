@@ -1,0 +1,66 @@
+<?php
+
+require_once __DIR__ . "/../../index.php";
+require_once __DIR__ . "/../../sql/connection.php";
+
+// validate request
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
+    http_response_code(400);
+    echo "INVALID REQUEST.1";
+    exit();
+}
+
+$request = json_decode(file_get_contents('php://input'), true);
+if ($request === false) {
+    http_response_code(422);
+    echo "INVALID REQUEST.2";
+    exit();
+}
+
+if (!isset($request['app_id']) || !isset($request['token'])) {
+    http_response_code(400);
+    echo "INVALID REQUEST.3";
+    exit();
+}
+
+$appId = $request['app_id'];
+$token = $request['token'];
+
+if (!is_string($appId) || !is_string($token)) {
+    http_response_code(400);
+    echo "INVALID REQUEST.4";
+    exit();
+}
+
+if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
+    http_response_code(400);
+        echo "INVALID REQUEST.5";
+        exit();
+}
+// end request validation
+
+$pdo = createConnection();
+$pdo->beginTransaction();
+
+try {
+    $checkStatement = $pdo->prepare("SELECT * FROM devices WHERE app_id = ? FOR UPDATE");
+    $checkStatement->execute([$appId]);
+
+    if ($checkStatement->rowCount() === 0) {
+        // register device record if not registered
+        $insertStatement = $pdo->prepare("INSERT INTO devices (app_id, device_token) VALUES (?, ?)");
+        $insertStatement->execute([$appId, $token]);
+    } else {
+        // update device token if already registered
+        $updateStatement = $pdo->prepare("UPDATE devices SET device_token = ? WHERE app_id = ?");
+        $updateStatement->execute([$token, $appId]);
+    }
+    $pdo->commit();
+} catch (Throwable $e) {
+    $pdo->rollback();
+    fwrite(STDERR, $e->getMessage());
+    http_response_code(500);
+    exit();
+}
+
+echo "OK.";

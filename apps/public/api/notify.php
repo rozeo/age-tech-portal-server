@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../../index.php";
+require_once __DIR__ . "/../../sql/connection.php";
 
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\Notification;
@@ -44,21 +45,25 @@ if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
 }
 // end request validation
 
+// start action
+$pdo = createConnection();
+
 // fetch subscribe device targets
-$kvsIndexKeyName = "subscribe_index_$appId";
-$kvsDeviceTokenKeyPrefix = "subscribe_device_{$appId}_"; // + index number
 $kvsCooldownKeyName = "subscribe_cooldown_$appId";
 
-$deviceCount = (int) apcu_fetch($kvsIndexKeyName);
+$deviceFetchStatement = $pdo->prepare(
+    "SELECT 
+        subscribes.app_id, subscribes.target_app_id, devices.device_token 
+    FROM subscribes 
+    LEFT JOIN devices ON subscribes.target_app_id = devices.app_id
+    WHERE subscribes.app_id = ?");
+$deviceFetchStatement->execute([$appId]);
 
-$targetTokens = [];
-for ($i = 1; $i <= $deviceCount; $i++) {
-     $kvsDeviceTokenKeyName = $kvsDeviceTokenKeyPrefix . $i;
-     $deviceToken = apcu_fetch($kvsDeviceTokenKeyName, $isSuccess);
-     if ($isSuccess) {
-        $targetTokens[] = $deviceToken;
-     }
-}
+$subscribes = $deviceFetchStatement->fetchAll();
+$targetTokens = array_map(
+    fn ($subscribe) => $subscribe['device_token'],
+    $subscribes,
+);
 
 if (count($targetTokens) > 0) {
     // check notification cooldown time.
