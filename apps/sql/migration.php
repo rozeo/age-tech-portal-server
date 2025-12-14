@@ -14,7 +14,9 @@ $migrationSql = [
     "CREATE TABLE IF NOT EXISTS devices (app_id VARCHAR(36) PRIMARY KEY NOT NULL, device_token TEXT NOT NULL);",
     "CREATE INDEX devices_index ON devices (app_id);",
     "TRUNCATE TABLE subscribes;",
-    "ALTER TABLE subscribes DROP COLUMN device_token, ADD COLUMN target_app_id VARCHAR(36) NOT NULL;"
+    "ALTER TABLE subscribes DROP COLUMN device_token, ADD COLUMN target_app_id VARCHAR(36) NOT NULL;",
+    "ALTER TABLE devices ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;",
+    "ALTER TABLE subscribes ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;",
 ];
 
 $pdo = createConnection();

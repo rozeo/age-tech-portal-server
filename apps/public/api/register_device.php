@@ -46,14 +46,16 @@ try {
     $checkStatement = $pdo->prepare("SELECT * FROM devices WHERE app_id = ? FOR UPDATE");
     $checkStatement->execute([$appId]);
 
+    $currentDatetime = new DateTime()->format('Y-m-d H:i:s');
+
     if ($checkStatement->rowCount() === 0) {
         // register device record if not registered
-        $insertStatement = $pdo->prepare("INSERT INTO devices (app_id, device_token) VALUES (?, ?)");
-        $insertStatement->execute([$appId, $token]);
+        $insertStatement = $pdo->prepare("INSERT INTO devices (app_id, device_token, created_at, updated_at) VALUES (?, ?, ?, ?)");
+        $insertStatement->execute([$appId, $token, $currentDatetime, $currentDatetime]);
     } else {
         // update device token if already registered
-        $updateStatement = $pdo->prepare("UPDATE devices SET device_token = ? WHERE app_id = ?");
-        $updateStatement->execute([$token, $appId]);
+        $updateStatement = $pdo->prepare("UPDATE devices SET device_token = ?, updated_at = ? WHERE app_id = ?");
+        $updateStatement->execute([$token, $currentDatetime, $appId]);
     }
     $pdo->commit();
 } catch (Throwable $e) {
