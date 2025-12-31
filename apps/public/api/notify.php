@@ -86,10 +86,10 @@ if (count($targetTokens) > 0) {
     foreach ($targetTokens as $targetToken) {
         try {
             $messagingClient->send($message->toToken($targetToken));
-        } catch (NotFound $e) {
-            // TODO
+        } catch (Throwable $e) {
+            debug_log("Failed send fcm notification message, reason = " . $e->getMessage());
         }
     }
 }
 
-echo "Send notifications to " . count($targetTokens) . " devices.";
+debug_log("Send notifications to " . count($targetTokens) . " devices.");
