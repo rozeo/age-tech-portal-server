@@ -61,12 +61,9 @@ $deviceFetchStatement = $pdo->prepare(
 $deviceFetchStatement->execute([$appId]);
 
 $subscribes = $deviceFetchStatement->fetchAll();
-$targetTokens = array_map(
-    fn ($subscribe) => $subscribe['device_token'],
-    $subscribes,
-);
 
-if (count($targetTokens) > 0) {
+$completions = 0;
+if (count($subscribes) > 0) {
     // check notification cooldown time.
     // apcu_add return falsy if key already exists, so check falsy result equals exists checking
     if (!apcu_add($kvsCooldownKeyName, 'COOLDOWN', ttl: NOTIFICATION_COOLDOWN)) {
@@ -82,14 +79,18 @@ if (count($targetTokens) > 0) {
             'state' => $state,
         ]);
 
-    $expiredSubscriptions = [];
-    foreach ($targetTokens as $targetToken) {
+    foreach ($subscribes as $subscribe) {
+        $targetAppId = $subscribe['target_app_id'];
+        $targetToken = $subscribe['device_token'];
+
         try {
+            debug_log("Send notification $appId -> $targetAppId");
             $messagingClient->send($message->toToken($targetToken));
+            $completions++;
         } catch (Throwable $e) {
             debug_log("Failed send fcm notification message, reason = " . $e->getMessage());
         }
     }
 }
 
-debug_log("Send notifications to " . count($targetTokens) . " devices.");
+debug_log("Send notifications to $completions tokens.");
