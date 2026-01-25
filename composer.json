@@ -9,6 +9,7 @@
     ],
     "require": {
         "kreait/firebase-php": "^7.24",
-        "ext-apcu": "*"
+        "ext-apcu": "*",
+        "google/cloud-storage": "^1.49"
     }
 }
