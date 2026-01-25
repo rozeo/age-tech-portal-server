@@ -2,6 +2,7 @@
 
 require_once __DIR__ . "/../../index.php";
 require_once __DIR__ . "/../../sql/connection.php";
+require_once __DIR__ . "/../../stores/subscriptions.php";
 
 // validate request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
@@ -74,5 +75,6 @@ try {
     exit();
 }
 
+storeSubscription($appId, $targetAppId);
 
 echo "OK";

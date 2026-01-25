@@ -62,6 +62,21 @@ $deviceFetchStatement->execute([$appId]);
 
 $subscribes = $deviceFetchStatement->fetchAll();
 
+function testFunc($appId) {
+    $subscriptions = fetchSubscriptions($appId);
+    $deviceTokens = array_filter(
+        array_map(fn ($id) => fetchDeviceToken($id), $subscriptions)
+    );
+
+    debug_log("loaded tokens: " . count($deviceTokens));
+}
+
+try {
+    testFunc($appId);
+} catch (Throwable $e) {
+    debug_log("Failed test function, reason = " . $e->getMessage());
+}
+
 $completions = 0;
 if (count($subscribes) > 0) {
     // check notification cooldown time.

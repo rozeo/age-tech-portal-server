@@ -2,6 +2,7 @@
 
 require_once __DIR__ . "/../../index.php";
 require_once __DIR__ . "/../../sql/connection.php";
+require_once __DIR__ . "/../../stores/device_tokens.php";
 
 use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Factory;
@@ -80,5 +81,7 @@ try {
     http_response_code(500);
     exit();
 }
+
+storeDeviceToken($appId, $token);
 
 echo "OK.";
