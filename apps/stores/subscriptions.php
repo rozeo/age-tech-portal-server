@@ -15,7 +15,7 @@ function fetchSubscriptions(string $appId): array
     $bucket = createGoogleCloudStorageClient();
     $prefix = "subscriptions/" . substr($appId, 0, 2) . "/$appId/";
 
-    $objects = $bucket->objects(['prefix' => $prefix . "*"]);
+    $objects = $bucket->objects(['prefix' => $prefix]);
 
     $subscribeAppIds = [];
     foreach ($objects as $ob) {

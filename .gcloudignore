@@ -3,3 +3,4 @@ age-tech-portal-server.iml
 composer.phar
 vendor/
 .git/
+tests/

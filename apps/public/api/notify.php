@@ -3,6 +3,9 @@
 require_once __DIR__ . "/../../index.php";
 require_once __DIR__ . "/../../sql/connection.php";
 
+require_once __DIR__ . "/../../stores/device_tokens.php";
+require_once __DIR__ . "/../../stores/subscriptions.php";
+
 use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
