@@ -88,7 +88,7 @@ if (count($subscriptions) > 0) {
             $messagingClient->send($message->toToken($targetToken));
             $completions++;
         } catch (Throwable $e) {
-            debug_log("Failed send fcm notification message, reason = " . $e->getMessage());
+            debug_log("Failed send fcm notification message, reason = " . get_class($e) . ": " . $e->getMessage());
         }
     }
 }
