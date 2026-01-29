@@ -4,6 +4,9 @@ require_once __DIR__ . "/../../index.php";
 require_once __DIR__ . "/../../sql/connection.php";
 require_once __DIR__ . "/../../stores/subscriptions.php";
 
+// appId = 通知元デバイス
+// targetAppId = 通知先デバイス
+
 // validate request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
     http_response_code(400);
@@ -41,39 +44,6 @@ if (!preg_match($uuidRegex, $appId) || !preg_match($uuidRegex, $targetAppId)) {
 }
 
 // end request validation
-
-$pdo = createConnection();
-$pdo->beginTransaction();
-
-try {
-    // check already registered active device tokens
-    $checkTargetAppId = [$appId, $targetAppId];
-    foreach ($checkTargetAppId as $checkAppId) {
-        $check1Statement = $pdo->prepare("SELECT * FROM devices WHERE app_id = ?");
-        $check1Statement->execute([$checkAppId]);
-        if ($check1Statement->rowCount() === 0) {
-            http_response_code(400);
-            echo "app_id=$checkAppId is NOT REGISTERED.";
-            exit();
-        }
-    }
-
-    // check already subscribed
-    $check2Statement = $pdo->prepare("SELECT * FROM subscribes WHERE app_id = ? AND target_app_id = ? FOR UPDATE");
-    $check2Statement->execute([$appId, $targetAppId]);
-
-    if ($check2Statement->rowCount() === 0) {
-        // register subscribe record if not subscribed
-        $insertStatement = $pdo->prepare("INSERT INTO subscribes (app_id, target_app_id, created_at) VALUES (?, ?, ?)");
-        $insertStatement->execute([$appId, $targetAppId, new DateTime()->format(DateTime::ATOM)]);
-    }
-    $pdo->commit();
-} catch (Throwable $e) {
-    $pdo->rollback();
-    fwrite(STDERR, $e->getMessage());
-    http_response_code(500);
-    exit();
-}
 
 storeSubscription($appId, $targetAppId);
 

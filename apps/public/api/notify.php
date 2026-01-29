@@ -49,39 +49,16 @@ if (!preg_match('/^[0-9a-f\-]+$/', $appId)) {
 }
 // end request validation
 
-// start action
-$pdo = createConnection();
 
 // fetch subscribe device targets
 $kvsCooldownKeyName = "subscribe_cooldown_$appId";
 
-$deviceFetchStatement = $pdo->prepare(
-    "SELECT 
-        subscribes.app_id, subscribes.target_app_id, devices.device_token 
-    FROM subscribes 
-    LEFT JOIN devices ON subscribes.target_app_id = devices.app_id
-    WHERE subscribes.app_id = ?");
-$deviceFetchStatement->execute([$appId]);
+$subscriptions = fetchSubscriptions($appId);
 
-$subscribes = $deviceFetchStatement->fetchAll();
-
-function testFunc($appId) {
-    $subscriptions = fetchSubscriptions($appId);
-    $deviceTokens = array_filter(
-        array_map(fn ($id) => fetchDeviceToken($id), $subscriptions)
-    );
-
-    debug_log("loaded tokens: " . count($deviceTokens));
-}
-
-try {
-    testFunc($appId);
-} catch (Throwable $e) {
-    debug_log("Failed test function, reason = " . $e->getMessage());
-}
+debug_log("loaded $appId subscriptions: " . count($subscriptions));
 
 $completions = 0;
-if (count($subscribes) > 0) {
+if (count($subscriptions) > 0) {
     // check notification cooldown time.
     // apcu_add return falsy if key already exists, so check falsy result equals exists checking
     if (!apcu_add($kvsCooldownKeyName, 'COOLDOWN', ttl: NOTIFICATION_COOLDOWN)) {
@@ -97,9 +74,14 @@ if (count($subscribes) > 0) {
             'state' => $state,
         ]);
 
-    foreach ($subscribes as $subscribe) {
-        $targetAppId = $subscribe['target_app_id'];
-        $targetToken = $subscribe['device_token'];
+    foreach ($subscriptions as $subscription) {
+        $targetAppId = $subscription;
+        $targetToken = fetchDeviceToken($targetAppId);
+
+        if ($targetToken === null) {
+            debug_log("Cannot fetching device token for app_id=$targetAppId");
+            continue;
+        }
 
         try {
             debug_log("Send notification $appId -> $targetAppId");
